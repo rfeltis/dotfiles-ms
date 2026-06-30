@@ -36,9 +36,24 @@
   programs.tmux = {
     enable = true;
     mouse = true;
-    keyMode = "vi";
     historyLimit = 50000;
     escapeTime = 10;
+
+    # Fix copy/paste when SSH'd into a mouse-enabled tmux: push selections to
+    # the *local* clipboard via OSC 52. Bind in both the emacs (copy-mode) and
+    # vi (copy-mode-vi) tables so the fix works regardless of keyMode.
+    extraConfig = ''
+      # Send tmux copies to the system clipboard via OSC 52 (works over SSH).
+      set -g set-clipboard on
+
+      # Mouse drag release: copy selection to the clipboard.
+      bind -T copy-mode    MouseDragEnd1Pane send -X copy-selection-and-cancel
+      bind -T copy-mode-vi MouseDragEnd1Pane send -X copy-selection-and-cancel
+
+      # Keyboard copy-mode yank to the system clipboard.
+      bind -T copy-mode    M-w send -X copy-selection-and-cancel
+      bind -T copy-mode-vi y   send -X copy-selection-and-cancel
+    '';
   };
 
   # Let home-manager manage itself so `home-manager` is on PATH.
